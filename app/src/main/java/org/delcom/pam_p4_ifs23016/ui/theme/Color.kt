@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 /* =========================
    BRAND COLORS (PLANT THEME)
    ========================= */
-val PlantGreen = Color(0xFF2E7D32)      // Hijau natural untuk tanaman
+val PlantGreen = Color(0xFF7D2E44)      // Hijau natural untuk tanaman
 val PlantGreenLight = Color(0xFF4CAF50)  // Hijau lebih terang
 val PlantGreenDark = Color(0xFF1B5E20)   // Hijau lebih gelap
 val PlantAccent = Color(0xFF8BC34A)      // Hijau cerah sebagai aksen
