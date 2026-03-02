@@ -7,15 +7,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -23,22 +15,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,7 +28,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -64,7 +41,6 @@ import org.delcom.pam_p4_ifs23016.helper.SuspendHelper
 import org.delcom.pam_p4_ifs23016.helper.SuspendHelper.SnackBarType
 import org.delcom.pam_p4_ifs23016.helper.ToolsHelper.toRequestBodyText
 import org.delcom.pam_p4_ifs23016.helper.ToolsHelper.uriToMultipart
-import org.delcom.pam_p4_ifs23016.network.books.data.ResponseBookData
 import org.delcom.pam_p4_ifs23016.ui.components.BottomNavComponent
 import org.delcom.pam_p4_ifs23016.ui.components.LoadingUI
 import org.delcom.pam_p4_ifs23016.ui.components.TopAppBarComponent
@@ -77,54 +53,39 @@ fun booksAddScreen(
     snackbarHost: SnackbarHostState,
     BookViewModel: BookViewModel
 ) {
-    // Ambil data dari viewmodel
     val uiStateBook by BookViewModel.uiState.collectAsState()
-
     var isLoading by remember { mutableStateOf(false) }
-    var tmpBook by remember { mutableStateOf<ResponseBookData?>(null) }
 
     LaunchedEffect(Unit) {
-        // Reset status Book action
         uiStateBook.BookAction = BookActionUIState.Loading
     }
 
-    // Simpan data
+    // ✅ Semua parameter sesuai nama field backend
     fun onSave(
         context: Context,
-        nama: String,
-        deskripsi: String,
+        title: String,
+        description: String,
         genre: String,
-        karakterUtama: String,
-        penulis: String,
+        mainCharacter: String,
+        author: String,
         file: Uri
     ) {
         isLoading = true
 
-        tmpBook = ResponseBookData(
-            nama = nama,
-            deskripsi = deskripsi,
-            genre = genre,
-            karakterUtama = karakterUtama,
-            penulis = penulis,
-            id = "",
-            createdAt = "",
-            updatedAt = ""
-        )
-
-        val namaBody = nama.toRequestBodyText()
-        val deskripsiBody = deskripsi.toRequestBodyText()
+        val titleBody = title.toRequestBodyText()
+        val descriptionBody = description.toRequestBodyText()
         val genreBody = genre.toRequestBodyText()
-        val karakterBody = karakterUtama.toRequestBodyText()
-        val penulisBody = karakterUtama.toRequestBodyText()
+        val mainCharacterBody = mainCharacter.toRequestBodyText()
+        val authorBody = author.toRequestBodyText() // ✅ bukan karakterUtama
 
         val filePart = uriToMultipart(context, file, "file")
 
         BookViewModel.postBook(
-            nama = namaBody,
-            deskripsi = deskripsiBody,
+            title = titleBody,
+            description = descriptionBody,
             genre = genreBody,
-            karakterUtama = karakterBody,
-            penulis = penulisBody,
+            mainCharacter = mainCharacterBody,
+            author = authorBody,
             file = filePart,
         )
     }
@@ -137,11 +98,7 @@ fun booksAddScreen(
                     type = SnackBarType.SUCCESS,
                     message = state.message
                 )
-                RouteHelper.to(
-                    navController,
-                    ConstHelper.RouteNames.books.path,
-                    true
-                )
+                RouteHelper.to(navController, ConstHelper.RouteNames.books.path, true)
                 isLoading = false
             }
             is BookActionUIState.Error -> {
@@ -156,7 +113,6 @@ fun booksAddScreen(
         }
     }
 
-    // Tampilkan halaman loading
     if (isLoading) {
         LoadingUI()
         return
@@ -167,64 +123,41 @@ fun booksAddScreen(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Top App Bar
         TopAppBarComponent(
             navController = navController,
             title = "Tambah Data",
             showBackButton = true,
         )
-        // Content
-        Box(
-            modifier = Modifier
-                .weight(1f)
-        ) {
-            booksAddUI(
-                tmpBook = tmpBook,
-                onSave = ::onSave
-            )
+        Box(modifier = Modifier.weight(1f)) {
+            booksAddUI(onSave = ::onSave)
         }
-        // Bottom Nav
         BottomNavComponent(navController = navController)
     }
 }
 
 @Composable
 fun booksAddUI(
-    tmpBook: ResponseBookData?,
-    onSave: (
-        Context,
-        String,
-        String,
-        String,
-        String,
-        String,
-        Uri
-    ) -> Unit
+    onSave: (Context, String, String, String, String, String, Uri) -> Unit
 ) {
     val alertState = remember { mutableStateOf(AlertState()) }
 
     var dataFile by remember { mutableStateOf<Uri?>(null) }
-    var dataNama by remember { mutableStateOf(tmpBook?.nama ?: "") }
-    var dataDeskripsi by remember { mutableStateOf(tmpBook?.deskripsi ?: "") }
-    var dataGenre by remember { mutableStateOf(tmpBook?.genre ?: "") }
-    var dataKarakterUtama by remember { mutableStateOf(tmpBook?.karakterUtama ?: "") }
-    var dataPenulis by remember { mutableStateOf(tmpBook?.penulis ?: "") }
+    var dataTitle by remember { mutableStateOf("") }           // ✅ bukan dataNama
+    var dataDescription by remember { mutableStateOf("") }    // ✅ bukan dataDeskripsi
+    var dataGenre by remember { mutableStateOf("") }
+    var dataMainCharacter by remember { mutableStateOf("") }  // ✅ bukan dataKarakterUtama
+    var dataAuthor by remember { mutableStateOf("") }         // ✅ bukan dataPenulis
     val context = LocalContext.current
-
-    // Focus manager
     val focusManager = LocalFocusManager.current
 
-    val deskripsiFocus = remember { FocusRequester() }
+    val descriptionFocus = remember { FocusRequester() }
     val genreFocus = remember { FocusRequester() }
-    val karakterFocus = remember { FocusRequester() }
-    val penulisFocus = remember { FocusRequester() }
-
+    val mainCharacterFocus = remember { FocusRequester() }
+    val authorFocus = remember { FocusRequester() }
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? ->
-        dataFile = uri
-    }
+    ) { uri: Uri? -> dataFile = uri }
 
     Column(
         modifier = Modifier
@@ -245,9 +178,7 @@ fun booksAddUI(
                     .background(MaterialTheme.colorScheme.secondary)
                     .clickable {
                         imagePicker.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     },
                 contentAlignment = Alignment.Center
@@ -262,302 +193,112 @@ fun booksAddUI(
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-                    Text(
-                        text = "Pilih Gambar",
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    Text("Pilih Gambar", color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
-
             Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Tap untuk mengganti gambar",
-                style = MaterialTheme.typography.bodySmall
-            )
+            Text("Tap untuk mengganti gambar", style = MaterialTheme.typography.bodySmall)
         }
 
-        // Nama
+        // Title
         OutlinedTextField(
-            value = dataNama,
-            onValueChange = { dataNama = it },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
-                cursorColor = MaterialTheme.colorScheme.primaryContainer,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-            label = {
-                Text(
-                    text = "Nama",
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { deskripsiFocus.requestFocus() }
-            ),
+            value = dataTitle,
+            onValueChange = { dataTitle = it },
+            label = { Text("Judul Buku", color = MaterialTheme.colorScheme.onPrimaryContainer) },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { descriptionFocus.requestFocus() }),
         )
 
-        // Deskripsi
+        // Description
         OutlinedTextField(
-            value = dataDeskripsi,
-            onValueChange = { dataDeskripsi = it },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
-                cursorColor = MaterialTheme.colorScheme.primaryContainer,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-            label = {
-                Text(
-                    text = "Deskripsi",
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .focusRequester(deskripsiFocus),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { genreFocus.requestFocus() }
-            ),
-            maxLines = 5,
-            minLines = 3
+            value = dataDescription,
+            onValueChange = { dataDescription = it },
+            label = { Text("Deskripsi", color = MaterialTheme.colorScheme.onPrimaryContainer) },
+            modifier = Modifier.fillMaxWidth().height(120.dp).focusRequester(descriptionFocus),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { genreFocus.requestFocus() }),
+            maxLines = 5, minLines = 3
         )
 
-        //genre
+        // Genre
         OutlinedTextField(
             value = dataGenre,
             onValueChange = { dataGenre = it },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
-                cursorColor = MaterialTheme.colorScheme.primaryContainer,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-            label = {
-                Text(
-                    text = "Genre",
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .focusRequester(genreFocus),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { karakterFocus.requestFocus() }
-            ),
-            maxLines = 5,
-            minLines = 3
+            label = { Text("Genre", color = MaterialTheme.colorScheme.onPrimaryContainer) },
+            modifier = Modifier.fillMaxWidth().focusRequester(genreFocus),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { mainCharacterFocus.requestFocus() }),
         )
 
-        // Karakter Utama
+        // Main Character
         OutlinedTextField(
-            value = dataKarakterUtama,
-            onValueChange = { dataKarakterUtama = it },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
-                cursorColor = MaterialTheme.colorScheme.primaryContainer,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-            label = {
-                Text(
-                    text = "Karakter Utama",
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .focusRequester(karakterFocus),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus() // menutup keyboard
-                }
-            ),
-            maxLines = 5,
-            minLines = 3
+            value = dataMainCharacter,
+            onValueChange = { dataMainCharacter = it },
+            label = { Text("Karakter Utama", color = MaterialTheme.colorScheme.onPrimaryContainer) },
+            modifier = Modifier.fillMaxWidth().focusRequester(mainCharacterFocus),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { authorFocus.requestFocus() }),
         )
 
-        // penulis
+        // Author
         OutlinedTextField(
-            value = dataPenulis,
-            onValueChange = { dataPenulis = it },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
-                cursorColor = MaterialTheme.colorScheme.primaryContainer,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-            label = {
-                Text(
-                    text = "Penulis",
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .focusRequester(penulisFocus),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus() // menutup keyboard
-                }
-            ),
-            maxLines = 5,
-            minLines = 3
+            value = dataAuthor,
+            onValueChange = { dataAuthor = it },
+            label = { Text("Penulis", color = MaterialTheme.colorScheme.onPrimaryContainer) },
+            modifier = Modifier.fillMaxWidth().focusRequester(authorFocus),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         )
 
         Spacer(modifier = Modifier.height(64.dp))
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        // Floating Action Button
+    Box(modifier = Modifier.fillMaxSize()) {
         FloatingActionButton(
             onClick = {
-                if (dataFile != null) {
-
-                    if(dataNama.isEmpty()) {
-                        AlertHelper.show(
-                            alertState,
-                            AlertType.ERROR,
-                            "Nama tidak boleh kosong!"
-                        )
-                        return@FloatingActionButton
-                    }
-
-                    if(dataDeskripsi.isEmpty()) {
-                        AlertHelper.show(
-                            alertState,
-                            AlertType.ERROR,
-                            "Deskripsi tidak boleh kosong!"
-                        )
-                        return@FloatingActionButton
-                    }
-
-                    if(dataGenre.isEmpty()) {
-                        AlertHelper.show(
-                            alertState,
-                            AlertType.ERROR,
-                            "Informasi genre tidak boleh kosong!"
-                        )
-                        return@FloatingActionButton
-                    }
-
-                    if(dataKarakterUtama.isEmpty()) {
-                        AlertHelper.show(
-                            alertState,
-                            AlertType.ERROR,
-                            "Informasi karakter utama tidak boleh kosong!"
-                        )
-                        return@FloatingActionButton
-                    }
-
-                    if(dataPenulis.isEmpty()) {
-                        AlertHelper.show(
-                            alertState,
-                            AlertType.ERROR,
-                            "Informasi genre tidak boleh kosong!"
-                        )
-                        return@FloatingActionButton
-                    }
-
-                    onSave(
-                        context,
-                        dataNama,
-                        dataDeskripsi,
-                        dataGenre,
-                        dataKarakterUtama,
-                        dataPenulis,
-                        dataFile!!
-                    )
-                } else {
-                    AlertHelper.show(
-                        alertState,
-                        AlertType.ERROR,
-                        "Gambar tidak boleh kosong!"
-                    )
+                if (dataFile == null) {
+                    AlertHelper.show(alertState, AlertType.ERROR, "Gambar tidak boleh kosong!")
                     return@FloatingActionButton
                 }
-
+                if (dataTitle.isEmpty()) {
+                    AlertHelper.show(alertState, AlertType.ERROR, "Judul tidak boleh kosong!")
+                    return@FloatingActionButton
+                }
+                if (dataDescription.isEmpty()) {
+                    AlertHelper.show(alertState, AlertType.ERROR, "Deskripsi tidak boleh kosong!")
+                    return@FloatingActionButton
+                }
+                if (dataGenre.isEmpty()) {
+                    AlertHelper.show(alertState, AlertType.ERROR, "Genre tidak boleh kosong!")
+                    return@FloatingActionButton
+                }
+                if (dataMainCharacter.isEmpty()) {
+                    AlertHelper.show(alertState, AlertType.ERROR, "Karakter utama tidak boleh kosong!")
+                    return@FloatingActionButton
+                }
+                if (dataAuthor.isEmpty()) {
+                    AlertHelper.show(alertState, AlertType.ERROR, "Penulis tidak boleh kosong!")
+                    return@FloatingActionButton
+                }
+                onSave(context, dataTitle, dataDescription, dataGenre, dataMainCharacter, dataAuthor, dataFile!!)
             },
-            modifier = Modifier
-                .align(Alignment.BottomEnd) // pojok kanan bawah
-                .padding(16.dp) // jarak dari tepi
-            ,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimary
         ) {
-            Icon(
-                imageVector = Icons.Default.Save,
-                contentDescription = "Simpan Data"
-            )
+            Icon(imageVector = Icons.Default.Save, contentDescription = "Simpan Data")
         }
     }
 
     if (alertState.value.isVisible) {
         AlertDialog(
-            onDismissRequest = {
-                AlertHelper.dismiss(alertState)
-            },
-            title = {
-                Text(alertState.value.type.title)
-            },
-            text = {
-                Text(alertState.value.message)
-            },
+            onDismissRequest = { AlertHelper.dismiss(alertState) },
+            title = { Text(alertState.value.type.title) },
+            text = { Text(alertState.value.message) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        AlertHelper.dismiss(alertState)
-                    }
-                ) {
-                    Text("OK")
-                }
+                TextButton(onClick = { AlertHelper.dismiss(alertState) }) { Text("OK") }
             }
         )
     }
-}
-
-@Preview(showBackground = true, name = "Light Mode")
-@Composable
-fun PreviewbooksAddUI() {
-//    DelcomTheme {
-//        booksAddUI(
-//            books = DummyData.getbooksAddData(),
-//            onOpen = {}
-//        )
-//    }
 }

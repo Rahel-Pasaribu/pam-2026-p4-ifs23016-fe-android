@@ -8,23 +8,24 @@ data class ResponseBooks(
 )
 
 @Serializable
-data class ResponseBook (
-    val Book: ResponseBookData
+data class ResponseBook(
+    val book: ResponseBookData  // ✅ "book" huruf kecil, sesuai backend
 )
 
 @Serializable
-data class ResponseBookAdd (
+data class ResponseBookAdd(
     val bookId: String
 )
 
 @Serializable
 data class ResponseBookData(
     val id: String,
-    val nama: String,
-    val deskripsi: String,
+    val title: String,        // ✅ bukan "nama"
+    val description: String,  // ✅ bukan "deskripsi"
     val genre: String,
-    val karakterUtama: String,
-    val penulis: String,
+    val mainCharacter: String, // ✅ bukan "karakterUtama"
+    val author: String,        // ✅ bukan "penulis"
+    val coverPath: String,     // ✅ tambahkan ini untuk gambar
     val createdAt: String,
     val updatedAt: String
 )

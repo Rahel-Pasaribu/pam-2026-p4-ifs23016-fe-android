@@ -7,14 +7,9 @@ import org.delcom.pam_p4_ifs23016.network.data.ResponseMessage
 import org.delcom.pam_p4_ifs23016.network.books.data.ResponseBook
 import org.delcom.pam_p4_ifs23016.network.books.data.ResponseBookAdd
 import org.delcom.pam_p4_ifs23016.network.books.data.ResponseBooks
-import org.delcom.pam_p4_ifs23016.network.books.data.ResponseProfile
 
-class BookRepository (private val bookApiService: BookApiService): IBookRepository {
-    override suspend fun getProfile(): ResponseMessage<ResponseProfile?> {
-        return SuspendHelper.safeApiCall {
-            bookApiService.getProfile()
-        }
-    }
+class BookRepository(private val bookApiService: BookApiService) : IBookRepository {
+
 
     override suspend fun getAllBooks(search: String?): ResponseMessage<ResponseBooks?> {
         return SuspendHelper.safeApiCall {
@@ -23,20 +18,20 @@ class BookRepository (private val bookApiService: BookApiService): IBookReposito
     }
 
     override suspend fun postBook(
-        nama: RequestBody,
-        deskripsi: RequestBody,
+        title: RequestBody,
+        description: RequestBody,
         genre: RequestBody,
-        karakterUtama: RequestBody,
-        penulis: RequestBody,
+        mainCharacter: RequestBody,
+        author: RequestBody,
         file: MultipartBody.Part
     ): ResponseMessage<ResponseBookAdd?> {
         return SuspendHelper.safeApiCall {
             bookApiService.postBook(
-                nama = nama,
-                deskripsi = deskripsi,
+                title = title,
+                description = description,
                 genre = genre,
-                karakterUtama = karakterUtama,
-                penulis = penulis,
+                mainCharacter = mainCharacter,
+                author = author,
                 file = file
             )
         }
@@ -50,21 +45,21 @@ class BookRepository (private val bookApiService: BookApiService): IBookReposito
 
     override suspend fun putBook(
         bookId: String,
-        nama: RequestBody,
-        deskripsi: RequestBody,
+        title: RequestBody,
+        description: RequestBody,
         genre: RequestBody,
-        karakterUtama: RequestBody,
-        penulis: RequestBody,
+        mainCharacter: RequestBody,
+        author: RequestBody,
         file: MultipartBody.Part?
     ): ResponseMessage<String?> {
         return SuspendHelper.safeApiCall {
             bookApiService.putBook(
                 bookId = bookId,
-                nama = nama,
-                deskripsi = deskripsi,
+                title = title,
+                description = description,
                 genre = genre,
-                karakterUtama = karakterUtama,
-                penulis = penulis,
+                mainCharacter = mainCharacter,
+                author = author,
                 file = file
             )
         }

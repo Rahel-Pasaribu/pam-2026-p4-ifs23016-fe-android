@@ -14,7 +14,6 @@ import org.delcom.pam_p4_ifs23016.network.books.data.ResponseBookData
 import org.delcom.pam_p4_ifs23016.network.books.service.IBookRepository
 import javax.inject.Inject
 
-
 sealed interface booksUIState {
     data class Success(val data: List<ResponseBookData>) : booksUIState
     data class Error(val message: String) : booksUIState
@@ -48,14 +47,9 @@ class BookViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(UIStateBook())
     val uiState = _uiState.asStateFlow()
 
-
     fun getAllBooks(search: String? = null) {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    books = booksUIState.Loading
-                )
-            }
+            _uiState.update { it.copy(books = booksUIState.Loading) }
             _uiState.update { it ->
                 val tmpState = runCatching {
                     repository.getAllBooks(search)
@@ -67,40 +61,31 @@ class BookViewModel @Inject constructor(
                             booksUIState.Error(it.message)
                         }
                     },
-                    onFailure = {
-                        booksUIState.Error(it.message ?: "Unknown error")
-                    }
+                    onFailure = { booksUIState.Error(it.message ?: "Unknown error") }
                 )
-
-                it.copy(
-                    books = tmpState
-                )
+                it.copy(books = tmpState)
             }
         }
     }
 
     fun postBook(
-        nama: RequestBody,
-        deskripsi: RequestBody,
+        title: RequestBody,       // ✅ bukan nama
+        description: RequestBody, // ✅ bukan deskripsi
         genre: RequestBody,
-        karakterUtama: RequestBody,
-        penulis: RequestBody,
+        mainCharacter: RequestBody, // ✅ bukan karakterUtama
+        author: RequestBody,        // ✅ bukan penulis
         file: MultipartBody.Part
     ) {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    BookAction = BookActionUIState.Loading
-                )
-            }
+            _uiState.update { it.copy(BookAction = BookActionUIState.Loading) }
             _uiState.update { it ->
                 val tmpState = runCatching {
                     repository.postBook(
-                        nama = nama,
-                        deskripsi = deskripsi,
+                        title = title,
+                        description = description,
                         genre = genre,
-                        karakterUtama = karakterUtama,
-                        penulis = penulis,
+                        mainCharacter = mainCharacter,
+                        author = author,
                         file = file
                     )
                 }.fold(
@@ -111,72 +96,54 @@ class BookViewModel @Inject constructor(
                             BookActionUIState.Error(it.message)
                         }
                     },
-                    onFailure = {
-                        BookActionUIState.Error(it.message ?: "Unknown error")
-                    }
+                    onFailure = { BookActionUIState.Error(it.message ?: "Unknown error") }
                 )
-
-                it.copy(
-                    BookAction = tmpState
-                )
+                it.copy(BookAction = tmpState)
             }
         }
     }
 
     fun getBookById(bookId: String) {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    Book = BookUIState.Loading
-                )
-            }
+            _uiState.update { it.copy(Book = BookUIState.Loading) }
             _uiState.update { it ->
                 val tmpState = runCatching {
                     repository.getBookById(bookId)
                 }.fold(
                     onSuccess = {
                         if (it.status == "success") {
-                            BookUIState.Success(it.data!!.Book)
+                            BookUIState.Success(it.data!!.book) // ✅ .book huruf kecil
                         } else {
                             BookUIState.Error(it.message)
                         }
                     },
-                    onFailure = {
-                        BookUIState.Error(it.message ?: "Unknown error")
-                    }
+                    onFailure = { BookUIState.Error(it.message ?: "Unknown error") }
                 )
-
-                it.copy(
-                    Book = tmpState
-                )
+                it.copy(Book = tmpState)
             }
         }
     }
 
     fun putBook(
         bookId: String,
-        nama: RequestBody,
-        deskripsi: RequestBody,
+        title: RequestBody,       // ✅ bukan nama
+        description: RequestBody, // ✅ bukan deskripsi
         genre: RequestBody,
-        karakterUtama: RequestBody,
-        penulis: RequestBody,
+        mainCharacter: RequestBody, // ✅ bukan karakterUtama
+        author: RequestBody,        // ✅ bukan penulis
         file: MultipartBody.Part?
     ) {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    BookAction = BookActionUIState.Loading
-                )
-            }
+            _uiState.update { it.copy(BookAction = BookActionUIState.Loading) }
             _uiState.update { it ->
                 val tmpState = runCatching {
                     repository.putBook(
                         bookId = bookId,
-                        nama = nama,
-                        deskripsi = deskripsi,
+                        title = title,
+                        description = description,
                         genre = genre,
-                        karakterUtama = karakterUtama,
-                        penulis = penulis,
+                        mainCharacter = mainCharacter,
+                        author = author,
                         file = file
                     )
                 }.fold(
@@ -187,30 +154,19 @@ class BookViewModel @Inject constructor(
                             BookActionUIState.Error(it.message)
                         }
                     },
-                    onFailure = {
-                        BookActionUIState.Error(it.message ?: "Unknown error")
-                    }
+                    onFailure = { BookActionUIState.Error(it.message ?: "Unknown error") }
                 )
-
-                it.copy(
-                    BookAction = tmpState
-                )
+                it.copy(BookAction = tmpState)
             }
         }
     }
 
     fun deleteBook(bookId: String) {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    BookAction = BookActionUIState.Loading
-                )
-            }
+            _uiState.update { it.copy(BookAction = BookActionUIState.Loading) }
             _uiState.update { it ->
                 val tmpState = runCatching {
-                    repository.deleteBook(
-                        bookId = bookId
-                    )
+                    repository.deleteBook(bookId = bookId)
                 }.fold(
                     onSuccess = {
                         if (it.status == "success") {
@@ -219,14 +175,9 @@ class BookViewModel @Inject constructor(
                             BookActionUIState.Error(it.message)
                         }
                     },
-                    onFailure = {
-                        BookActionUIState.Error(it.message ?: "Unknown error")
-                    }
+                    onFailure = { BookActionUIState.Error(it.message ?: "Unknown error") }
                 )
-
-                it.copy(
-                    BookAction = tmpState
-                )
+                it.copy(BookAction = tmpState)
             }
         }
     }
